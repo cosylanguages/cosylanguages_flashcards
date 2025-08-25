@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  decks        Deck[]
+  media        Media[]  @relation("UserMedia")
+}
+
+model Deck {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  cards       Card[]
+  createdAt   DateTime @default(now())
+}
+
+model Card {
+  id        Int      @id @default(autoincrement())
+  front     String
+  back      String
+  deckId    Int
+  deck      Deck     @relation(fields: [deckId], references: [id])
+  mediaId   Int?
+  media     Media?   @relation(fields: [mediaId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Media {
+  id           Int      @id @default(autoincrement())
+  url          String
+  type         String
+  uploadedById Int
+  uploadedBy   User     @relation("UserMedia", fields: [uploadedById], references: [id])
+  cards        Card[]
+  createdAt    DateTime @default(now())
+}
